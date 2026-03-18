@@ -1,9 +1,15 @@
-'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+"use client"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { InfoCard } from "@/components/admin/InfoCard"
 
-type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'received' | 'refunded'
-type RefundMethod = 'original_payment' | 'store_credit' | 'replacement'
+type ReturnStatus = "pending" | "approved" | "rejected" | "received" | "refunded"
+type RefundMethod = "original_payment" | "store_credit" | "replacement"
 
 interface Props {
   returnId: number
@@ -21,37 +27,30 @@ export default function ReturnActionPanel({
   orderTotal,
 }: Props) {
   const router = useRouter()
-  const [loading, setLoading] = useState<string | null>(null)
-  const [error, setError] = useState('')
-
-  // Approve form state
+  const [loading, setLoading]           = useState<string | null>(null)
+  const [error, setError]               = useState("")
   const [refundAmount, setRefundAmount] = useState(currentRefundAmount ?? orderTotal)
   const [refundMethod, setRefundMethod] = useState<RefundMethod>(
-    paymentMethod === 'razorpay' ? 'original_payment' : 'store_credit'
+    paymentMethod === "razorpay" ? "original_payment" : "store_credit"
   )
-  const [adminNotes, setAdminNotes] = useState('')
-
-  // Reject form state
+  const [adminNotes, setAdminNotes]     = useState("")
   const [showRejectForm, setShowRejectForm] = useState(false)
-  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectionReason, setRejectionReason] = useState("")
 
-  async function callAction(
-    action: string,
-    extra?: Record<string, unknown>
-  ) {
+  async function callAction(action: string, extra?: Record<string, unknown>) {
     setLoading(action)
-    setError('')
+    setError("")
     try {
       const res = await fetch(`/api/admin/returns/${returnId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ...extra }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Action failed'); return }
+      if (!res.ok) { setError(data.error ?? "Action failed"); return }
       router.refresh()
     } catch {
-      setError('Network error')
+      setError("Network error")
     } finally {
       setLoading(null)
     }
@@ -60,165 +59,161 @@ export default function ReturnActionPanel({
   return (
     <div className="flex flex-col gap-4">
       {error && (
-        <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-          {error}
-        </div>
+        <Alert variant="destructive" className="border-red-500/30 bg-red-500/10 rounded-none">
+          <AlertDescription className="text-xs text-red-400">{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Pending → approve or reject */}
-      {status === 'pending' && (
+      {status === "pending" && (
         <>
-          <div className="bg-surface border border-border p-5 flex flex-col gap-4">
-            <h3 className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em]">
-              Approve Return
-            </h3>
-            <div>
-              <label className="block text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-1">
-                Refund Amount (₹)
-              </label>
-              <input
-                type="number"
-                value={refundAmount}
-                onChange={e => setRefundAmount(e.target.value)}
-                className="w-full bg-void border border-border px-3 py-2 text-sm text-chalk outline-none focus:border-acid transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-1">
-                Refund Method
-              </label>
-              <select
-                value={refundMethod}
-                onChange={e => setRefundMethod(e.target.value as RefundMethod)}
-                className="w-full bg-void border border-border px-3 py-2 text-sm text-chalk outline-none focus:border-acid transition-colors"
-              >
-                {paymentMethod === 'razorpay' && (
-                  <option value="original_payment">Original Payment (Razorpay)</option>
-                )}
-                <option value="store_credit">Store Credit</option>
-                <option value="replacement">Send Replacement</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-1">
-                Admin Notes <span className="font-normal normal-case text-chalk-3">(optional)</span>
-              </label>
-              <textarea
-                value={adminNotes}
-                onChange={e => setAdminNotes(e.target.value)}
-                rows={2}
-                className="w-full bg-void border border-border px-3 py-2 text-sm text-chalk placeholder:text-chalk-3 outline-none focus:border-acid resize-none transition-colors"
-                placeholder="Internal notes…"
-              />
-            </div>
-            <button
-              onClick={() => callAction('approve', {
-                refundAmount: parseFloat(refundAmount),
-                refundMethod,
-                adminNotes: adminNotes || undefined,
-              })}
-              disabled={!!loading}
-              className="w-full py-2.5 bg-acid text-void text-sm font-bold hover:bg-acid-dim disabled:opacity-60 transition-colors uppercase tracking-[0.04em]"
-            >
-              {loading === 'approve' ? 'Approving…' : 'Approve Return'}
-            </button>
-          </div>
-
-          {!showRejectForm ? (
-            <button
-              onClick={() => setShowRejectForm(true)}
-              className="w-full py-2.5 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/10 transition-colors uppercase tracking-[0.04em]"
-            >
-              Reject Return
-            </button>
-          ) : (
-            <div className="bg-surface border border-red-500/20 p-5 flex flex-col gap-3">
-              <h3 className="text-xs font-semibold text-red-400 uppercase tracking-[0.06em]">
-                Reject Return
-              </h3>
-              <div>
-                <label className="block text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-1">
-                  Rejection Reason
-                </label>
-                <textarea
-                  value={rejectionReason}
-                  onChange={e => setRejectionReason(e.target.value)}
-                  rows={3}
-                  placeholder="Explain why this return is being rejected…"
-                  className="w-full bg-void border border-border px-3 py-2 text-sm text-chalk placeholder:text-chalk-3 outline-none focus:border-red-500 resize-none transition-colors"
+          <InfoCard title="Approve Return">
+            <div className="flex flex-col gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em]">
+                  Refund Amount (₹)
+                </Label>
+                <Input
+                  type="number"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  className="bg-void border-border text-chalk rounded-none focus-visible:ring-0 focus-visible:border-acid"
                 />
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowRejectForm(false)}
-                  className="flex-1 py-2 border border-border text-chalk-2 text-sm hover:border-border-hi transition-colors"
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em]">
+                  Refund Method
+                </Label>
+                <select
+                  value={refundMethod}
+                  onChange={(e) => setRefundMethod(e.target.value as RefundMethod)}
+                  className="w-full bg-void border border-border px-3 py-2 text-sm text-chalk outline-none focus:border-acid transition-colors"
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => callAction('reject', { rejectionReason })}
-                  disabled={!!loading}
-                  className="flex-1 py-2 bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-60 transition-colors"
-                >
-                  {loading === 'reject' ? 'Rejecting…' : 'Confirm Reject'}
-                </button>
+                  {paymentMethod === "razorpay" && (
+                    <option value="original_payment">Original Payment (Razorpay)</option>
+                  )}
+                  <option value="store_credit">Store Credit</option>
+                  <option value="replacement">Send Replacement</option>
+                </select>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em]">
+                  Admin Notes <span className="font-normal normal-case text-chalk-3">(optional)</span>
+                </Label>
+                <Textarea
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Internal notes…"
+                  className="bg-void border-border text-chalk placeholder:text-chalk-3 rounded-none focus-visible:ring-0 focus-visible:border-acid resize-none"
+                />
+              </div>
+              <Button
+                onClick={() =>
+                  callAction("approve", {
+                    refundAmount: parseFloat(refundAmount),
+                    refundMethod,
+                    adminNotes: adminNotes || undefined,
+                  })
+                }
+                disabled={!!loading}
+                className="w-full bg-acid text-void hover:bg-acid-dim rounded-none uppercase tracking-[0.04em] text-sm font-bold"
+              >
+                {loading === "approve" ? "Approving…" : "Approve Return"}
+              </Button>
             </div>
+          </InfoCard>
+
+          {!showRejectForm ? (
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectForm(true)}
+              className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-none uppercase tracking-[0.04em]"
+            >
+              Reject Return
+            </Button>
+          ) : (
+            <InfoCard title="Reject Return" className="border-red-500/20">
+              <div className="flex flex-col gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em]">
+                    Rejection Reason
+                  </Label>
+                  <Textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={3}
+                    placeholder="Explain why this return is being rejected…"
+                    className="bg-void border-border text-chalk placeholder:text-chalk-3 rounded-none focus-visible:ring-0 focus-visible:border-red-500 resize-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRejectForm(false)}
+                    className="flex-1 border-border text-chalk-2 rounded-none"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => callAction("reject", { rejectionReason })}
+                    disabled={!!loading}
+                    className="flex-1 bg-red-500 text-white hover:bg-red-600 rounded-none"
+                  >
+                    {loading === "reject" ? "Rejecting…" : "Confirm Reject"}
+                  </Button>
+                </div>
+              </div>
+            </InfoCard>
           )}
         </>
       )}
 
       {/* Approved → mark received */}
-      {status === 'approved' && (
-        <div className="bg-surface border border-border p-5">
-          <h3 className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-3">
-            Next Step
-          </h3>
+      {status === "approved" && (
+        <InfoCard title="Next Step">
           <p className="text-sm text-chalk-2 mb-4">
             Once you receive the returned item, mark it as received.
           </p>
-          <button
-            onClick={() => callAction('mark_received')}
+          <Button
+            onClick={() => callAction("mark_received")}
             disabled={!!loading}
-            className="w-full py-2.5 bg-acid text-void text-sm font-bold hover:bg-acid-dim disabled:opacity-60 transition-colors uppercase tracking-[0.04em]"
+            className="w-full bg-acid text-void hover:bg-acid-dim rounded-none uppercase tracking-[0.04em] text-sm font-bold"
           >
-            {loading === 'mark_received' ? 'Updating…' : 'Mark as Received'}
-          </button>
-        </div>
+            {loading === "mark_received" ? "Updating…" : "Mark as Received"}
+          </Button>
+        </InfoCard>
       )}
 
       {/* Received → process refund */}
-      {status === 'received' && (
-        <div className="bg-surface border border-border p-5">
-          <h3 className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-3">
-            Process Refund
-          </h3>
+      {status === "received" && (
+        <InfoCard title="Process Refund">
           <p className="text-sm text-chalk-2 mb-4">
-            {paymentMethod === 'razorpay'
-              ? 'This will trigger a Razorpay refund automatically.'
-              : 'Mark as refunded after processing the COD refund manually.'}
+            {paymentMethod === "razorpay"
+              ? "This will trigger a Razorpay refund automatically."
+              : "Mark as refunded after processing the COD refund manually."}
           </p>
-          <button
-            onClick={() => callAction('mark_refunded')}
+          <Button
+            onClick={() => callAction("mark_refunded")}
             disabled={!!loading}
-            className="w-full py-2.5 bg-acid text-void text-sm font-bold hover:bg-acid-dim disabled:opacity-60 transition-colors uppercase tracking-[0.04em]"
+            className="w-full bg-acid text-void hover:bg-acid-dim rounded-none uppercase tracking-[0.04em] text-sm font-bold"
           >
-            {loading === 'mark_refunded'
-              ? 'Processing…'
-              : paymentMethod === 'razorpay'
-              ? 'Issue Razorpay Refund'
-              : 'Mark as Refunded'}
-          </button>
-        </div>
+            {loading === "mark_refunded"
+              ? "Processing…"
+              : paymentMethod === "razorpay"
+              ? "Issue Razorpay Refund"
+              : "Mark as Refunded"}
+          </Button>
+        </InfoCard>
       )}
 
       {/* Terminal states */}
-      {status === 'refunded' && (
-        <div className="px-4 py-3 bg-[rgba(204,255,0,.06)] border border-acid/20 text-sm text-acid">
+      {status === "refunded" && (
+        <div className="px-4 py-3 bg-acid/[0.06] border border-acid/20 text-sm text-acid">
           ✓ Refund has been processed
         </div>
       )}
-      {status === 'rejected' && (
+      {status === "rejected" && (
         <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 text-sm text-red-400">
           This return has been rejected
         </div>

@@ -1,27 +1,38 @@
-import { getInventoryDetail } from "@/db/queries/admin-inventory";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import StockAdjustForm from "./_components/StockAdjustForm";
+import { getInventoryDetail } from "@/db/queries/admin-inventory"
+import { notFound } from "next/navigation"
+import Link from "next/link"
+import StockAdjustForm from "./_components/StockAdjustForm"
+import { InfoCard } from "@/components/admin/InfoCard"
+import { StatusBadge } from "@/components/admin/StatusBadge"
+import { Button } from "@/components/ui/button"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
-export const metadata = { title: "Inventory Detail — Admin" };
+export const metadata = { title: "Inventory Detail — Admin" }
 
 const CHANGE_COLOR: Record<string, string> = {
-  purchase: "text-acid",
-  return: "text-acid",
+  purchase:   "text-acid",
+  return:     "text-acid",
   adjustment: "text-blue-400",
-  sale: "text-chalk-3",
-  damage: "text-red-400",
-  expired: "text-red-400",
-};
+  sale:       "text-chalk-3",
+  damage:     "text-red-400",
+  expired:    "text-red-400",
+}
 
 const CHANGE_LABEL: Record<string, string> = {
-  purchase: "Purchase",
-  return: "Return",
+  purchase:   "Purchase",
+  return:     "Return",
   adjustment: "Adjustment",
-  sale: "Sale",
-  damage: "Damage",
-  expired: "Expired",
-};
+  sale:       "Sale",
+  damage:     "Damage",
+  expired:    "Expired",
+}
 
 const fmtDate = (d: Date | null | undefined) =>
   d
@@ -32,79 +43,91 @@ const fmtDate = (d: Date | null | undefined) =>
         hour: "2-digit",
         minute: "2-digit",
       })
-    : "—";
+    : "—"
 
 export default async function InventoryDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const { id } = await params;
-  const productId = Number(id);
-  if (isNaN(productId)) notFound();
+  const { id }   = await params
+  const productId = Number(id)
+  if (isNaN(productId)) notFound()
 
-  const { product, logs } = await getInventoryDetail(productId);
-  if (!product) notFound();
+  const { product, logs } = await getInventoryDetail(productId)
+  if (!product) notFound()
 
-  const isLow = product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
-  const isOut = product.stockQuantity === 0;
+  const isLow = product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold
+  const isOut = product.stockQuantity === 0
 
   return (
     <div className="p-8">
-      {/* Breadcrumb */}
-      <div className="text-xs text-chalk-3 mb-4">
-        <Link href="/admin/inventory" className="hover:text-acid transition-colors">
-          Inventory
-        </Link>
-        {" / "}
-        {product.name}
-      </div>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/inventory" className="text-chalk-3 hover:text-acid">Inventory</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator className="text-chalk-3" />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="text-chalk">{product.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-extrabold text-chalk tracking-tight">{product.name}</h1>
           <p className="text-sm font-mono text-chalk-3 mt-1">{product.sku}</p>
         </div>
-        <Link
-          href={`/admin/products/${productId}/edit`}
-          className="text-xs text-chalk-3 hover:text-acid transition-colors border border-border px-3 py-1.5"
-        >
-          Edit Product
-        </Link>
+        <Button asChild variant="outline" size="sm" className="border-border text-chalk-3 rounded-none h-7 text-xs">
+          <Link href={`/admin/products/${productId}/edit`}>Edit Product</Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-[1fr_300px] gap-6">
-        {/* Left — log history */}
+        {/* Left — status + log */}
         <div className="flex flex-col gap-5">
-          {/* Stock status card */}
+          {/* Stock status cards */}
           <div className="grid grid-cols-3 gap-3">
-            <div className={`border p-4 text-center ${isOut ? "border-red-500/30 bg-red-500/5" : isLow ? "border-amber-500/30 bg-amber-500/5" : "border-acid/20 bg-[rgba(204,255,0,.04)]"}`}>
-              <div className={`text-4xl font-extrabold font-display ${isOut ? "text-red-400" : isLow ? "text-amber-400" : "text-acid"}`}>
+            <div
+              className={`border p-4 text-center ${
+                isOut ? "border-red-500/30 bg-red-500/5"
+                : isLow ? "border-amber-500/30 bg-amber-500/5"
+                : "border-acid/20 bg-acid/[0.04]"
+              }`}
+            >
+              <div
+                className={`text-4xl font-extrabold font-display ${
+                  isOut ? "text-red-400" : isLow ? "text-amber-400" : "text-acid"
+                }`}
+              >
                 {product.stockQuantity}
               </div>
               <div className="text-[11px] text-chalk-3 uppercase tracking-wide mt-1">Current Stock</div>
             </div>
             <div className="border border-border p-4 text-center bg-surface">
-              <div className="text-4xl font-extrabold font-display text-chalk">{product.lowStockThreshold}</div>
+              <div className="text-4xl font-extrabold font-display text-chalk">
+                {product.lowStockThreshold}
+              </div>
               <div className="text-[11px] text-chalk-3 uppercase tracking-wide mt-1">Low Stock Alert</div>
             </div>
-            <div className="border border-border p-4 text-center bg-surface">
-              <div className={`text-sm font-bold uppercase tracking-wide mt-2 ${isOut ? "text-red-400" : isLow ? "text-amber-400" : "text-acid"}`}>
-                {isOut ? "Out of Stock" : isLow ? "Low Stock" : "In Stock"}
-              </div>
+            <div className="border border-border p-4 text-center bg-surface flex flex-col items-center justify-center">
+              <StatusBadge
+                status={isOut ? "out_of_stock" : isLow ? "low_stock" : "in_stock"}
+                type="inventory"
+                className="mt-2"
+              />
               <div className="text-[11px] text-chalk-3 uppercase tracking-wide mt-1">Status</div>
             </div>
           </div>
 
           {/* History table */}
-          <div className="bg-surface border border-border">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em]">
-                Inventory History
-              </h3>
+          <InfoCard title={`Inventory History`} contentClassName="p-0">
+            <div className="px-5 py-3 border-b border-border flex justify-between">
               <span className="text-xs text-chalk-3">{logs.length} entries</span>
             </div>
-
             {logs.length === 0 ? (
               <div className="p-10 text-center text-chalk-3 text-sm">
                 No adjustments recorded yet
@@ -114,7 +137,10 @@ export default async function InventoryDetailPage({
                 <thead>
                   <tr className="border-b border-border">
                     {["Date", "Type", "Change", "Before", "After", "Reference", "Notes"].map((h) => (
-                      <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold text-chalk-3 uppercase tracking-wider">
+                      <th
+                        key={h}
+                        className="px-4 py-2.5 text-left text-[11px] font-semibold text-chalk-3 uppercase tracking-wider"
+                      >
                         {h}
                       </th>
                     ))}
@@ -123,25 +149,35 @@ export default async function InventoryDetailPage({
                 <tbody className="divide-y divide-border">
                   {logs.map((log) => (
                     <tr key={log.id} className="hover:bg-void-3 transition-colors">
-                      <td className="px-4 py-2.5 text-xs text-chalk-3 whitespace-nowrap">{fmtDate(log.createdAt)}</td>
+                      <td className="px-4 py-2.5 text-xs text-chalk-3 whitespace-nowrap">
+                        {fmtDate(log.createdAt)}
+                      </td>
                       <td className="px-4 py-2.5">
                         <span className={`text-xs font-semibold ${CHANGE_COLOR[log.changeType] ?? "text-chalk-3"}`}>
                           {CHANGE_LABEL[log.changeType] ?? log.changeType}
                         </span>
                       </td>
-                      <td className={`px-4 py-2.5 font-bold text-sm ${log.quantityChange > 0 ? "text-acid" : "text-red-400"}`}>
+                      <td
+                        className={`px-4 py-2.5 font-bold text-sm ${
+                          log.quantityChange > 0 ? "text-acid" : "text-red-400"
+                        }`}
+                      >
                         {log.quantityChange > 0 ? "+" : ""}{log.quantityChange}
                       </td>
                       <td className="px-4 py-2.5 text-chalk-3 text-sm">{log.quantityBefore}</td>
                       <td className="px-4 py-2.5 text-chalk font-semibold text-sm">{log.quantityAfter}</td>
-                      <td className="px-4 py-2.5 text-xs font-mono text-chalk-3">{log.referenceNumber ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-xs text-chalk-3 max-w-[160px] truncate">{log.notes ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-xs font-mono text-chalk-3">
+                        {log.referenceNumber ?? "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-chalk-3 max-w-[160px] truncate">
+                        {log.notes ?? "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
-          </div>
+          </InfoCard>
         </div>
 
         {/* Right — adjust form */}
@@ -150,5 +186,5 @@ export default async function InventoryDetailPage({
         </div>
       </div>
     </div>
-  );
+  )
 }
