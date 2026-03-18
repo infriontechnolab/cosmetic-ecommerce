@@ -1,0 +1,19 @@
+{
+  "tagline": "New Collection",
+  "headline": "Your skin.",
+  "headlineAccent": "Reimagined.",
+  "description": "Science-backed formulas. Expert-curated edits. 2000+ luxury brands — all in one place, delivered to your door.",
+  "ctaPrimary": "Shop Now",
+  "ctaSecondary": "Explore Brands",
+  "stats": [
+    { "value": "2000+", "label": "Brands" },
+    { "value": "50K+", "label": "Products" },
+    { "value": "4.8★", "label": "App Rating" },
+    { "value": "1M+", "label": "Customers" }
+  ],
+  "spotlightBadge": "◆ #1 Bestseller",
+  "spotlightProduct": "Velvet Renewal Sérum",
+  "spotlightRating": "★★★★★",
+  "spotlightReviews": "2,341 verified reviews",
+  "spotlightPrice": "₹4,999"
+}

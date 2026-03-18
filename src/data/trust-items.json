@@ -1,0 +1,7 @@
+[
+  { "iconKey": "delivery", "title": "Free Delivery", "sub": "On orders above ₹499" },
+  { "iconKey": "returns", "title": "Easy Returns", "sub": "30-day hassle-free returns" },
+  { "iconKey": "authentic", "title": "100% Authentic", "sub": "Genuine products, always" },
+  { "iconKey": "payment", "title": "Secure Payment", "sub": "Cards, UPI, wallet & more" },
+  { "iconKey": "curated", "title": "Expert Curated", "sub": "By beauty professionals" }
+]

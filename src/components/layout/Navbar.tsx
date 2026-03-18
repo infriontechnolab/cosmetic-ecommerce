@@ -1,0 +1,213 @@
+'use client'
+import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
+import { useScrollShadow } from '@/hooks/useScrollShadow'
+import { useCart } from '@/context/CartContext'
+import { useWishlist } from '@/context/WishlistContext'
+import navCats from '@/data/nav-categories.json'
+
+// Map nav category labels to URL slugs
+const LABEL_TO_SLUG: Record<string, string> = {
+  "What's New": 'whats-new',
+  'Makeup': 'makeup',
+  'Skin': 'skincare',
+  'Hair': 'hair',
+  'Fragrance': 'fragrance',
+  'Men': 'men',
+  'Bath & Body': 'bath-body',
+  'Tools': 'tools',
+  'Wellness': 'wellness',
+  'Minis': 'minis',
+  'Gifts': 'gifts',
+  'Offers': 'offers',
+}
+
+export default function Navbar() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef<HTMLDivElement>(null)
+  const shadowed = useScrollShadow()
+  const { count } = useCart()
+  const { count: wishCount } = useWishlist()
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  function handleSearch() {
+    const q = searchQuery.trim()
+    if (q) router.push(`/search?q=${encodeURIComponent(q)}`)
+  }
+
+  function handleSearchKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') handleSearch()
+  }
+
+  function getActiveTab(): number {
+    const match = pathname.match(/^\/category\/(.+)/)
+    if (match) {
+      const slug = match[1]
+      const idx = navCats.findIndex(cat => LABEL_TO_SLUG[cat.label] === slug)
+      return idx
+    }
+    return -1
+  }
+
+  const activeTab = getActiveTab()
+
+  return (
+    <nav className={`sticky top-0 z-[800] bg-void border-b border-border transition-shadow duration-200 ${shadowed ? 'shadow-[0_2px_24px_rgba(0,0,0,.5)]' : ''}`}>
+      {/* Top bar */}
+      <div className="max-w-[1440px] mx-auto px-6 flex items-center h-[68px] gap-5">
+        {/* Logo */}
+        <Link href="/" className="text-[22px] font-extrabold tracking-[-0.5px] text-chalk whitespace-nowrap flex-shrink-0 font-display">
+          MAISON<span className="text-acid">.</span>
+        </Link>
+
+        {/* Search */}
+        <div className="flex-1 max-w-[540px] mx-auto relative flex items-center bg-surface border-[1.5px] border-border px-[14px] gap-[10px] transition-all duration-200 focus-within:border-acid focus-within:shadow-[0_0_0_3px_rgba(204,255,0,.1)]">
+          <svg className="w-[17px] h-[17px] stroke-chalk-3 flex-shrink-0" fill="none" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKey}
+            placeholder='Search "serum", "lipstick", "Charlotte Tilbury"…'
+            className="flex-1 border-none bg-transparent font-sans text-sm text-chalk outline-none py-[11px] placeholder:text-chalk-3"
+          />
+          <button onClick={handleSearch} className="px-[14px] py-[6px] bg-acid text-void text-xs font-bold flex-shrink-0 hover:bg-acid-dim transition-colors">Search</button>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          {/* Specials */}
+          <div className="flex items-center gap-1 border-l border-border pl-4">
+            <Link href="/products" className="px-3 py-[5px] text-xs font-bold border border-acid text-acid hover:bg-acid hover:text-void transition-all">EXCLUSIVE</Link>
+            <Link href="/products?sort=price-asc" className="px-3 py-[5px] text-xs font-bold bg-void-3 text-chalk-2 border border-border hover:border-acid hover:text-acid transition-all">OFFERS</Link>
+          </div>
+          {/* Icons */}
+          <div className="flex items-center gap-0.5">
+            <div ref={accountRef} className="relative">
+              <button
+                onClick={() => setAccountOpen(o => !o)}
+                className={`flex flex-col items-center justify-center gap-0.5 w-[52px] h-[52px] transition-all ${accountOpen || status === 'authenticated' ? 'text-acid' : 'text-chalk-2 hover:text-acid'}`}
+              >
+                <svg className="w-5 h-5 stroke-current" fill="none" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span className="text-[10px] font-medium">
+                  {status === 'authenticated' ? (session.user?.name?.split(' ')[0] ?? 'Account') : 'Account'}
+                </span>
+              </button>
+
+              {accountOpen && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-void border border-border shadow-xl z-50 py-1">
+                  {status === 'authenticated' ? (
+                    <>
+                      <div className="px-4 py-2.5 border-b border-border">
+                        <p className="text-xs font-semibold text-chalk truncate">{session.user?.name}</p>
+                        <p className="text-[11px] text-chalk-3 truncate">{session.user?.email}</p>
+                      </div>
+                      <Link
+                        href="/account"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-chalk-2 hover:text-chalk hover:bg-surface transition-colors"
+                      >
+                        <svg className="w-4 h-4 stroke-current" fill="none" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        My Account
+                      </Link>
+                      <Link
+                        href="/account/orders"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-chalk-2 hover:text-chalk hover:bg-surface transition-colors"
+                      >
+                        <svg className="w-4 h-4 stroke-current" fill="none" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        My Orders
+                      </Link>
+                      <div className="border-t border-border mt-1 pt-1">
+                        <button
+                          onClick={() => { setAccountOpen(false); signOut({ callbackUrl: '/' }) }}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-surface transition-colors"
+                        >
+                          <svg className="w-4 h-4 stroke-current" fill="none" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                          Sign Out
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/sign-in"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-chalk-2 hover:text-chalk hover:bg-surface transition-colors"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/sign-up"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-acid font-semibold hover:bg-surface transition-colors"
+                      >
+                        Create Account
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            <Link href="/wishlist" className="flex flex-col items-center justify-center gap-0.5 w-[52px] h-[52px] text-chalk-2 hover:text-acid transition-all relative">
+              {wishCount > 0 && (
+                <div className="absolute top-[5px] right-[5px] min-w-[16px] h-[16px] bg-acid text-void text-[9px] font-bold flex items-center justify-center px-1">{wishCount}</div>
+              )}
+              <svg className="w-5 h-5 stroke-current" fill="none" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span className="text-[10px] font-medium">Wishlist</span>
+            </Link>
+            <Link href="/cart" className="flex flex-col items-center justify-center gap-0.5 w-[52px] h-[52px] text-chalk-2 hover:text-acid transition-all relative">
+              {count > 0 && (
+                <div className="absolute top-[5px] right-[5px] min-w-[16px] h-[16px] bg-acid text-void text-[9px] font-bold flex items-center justify-center px-1">{count}</div>
+              )}
+              <svg className="w-5 h-5 stroke-current" fill="none" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span className="text-[10px] font-medium">Bag</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Category strip */}
+      <div className="border-t border-border overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="max-w-[1440px] mx-auto px-6 flex items-center">
+          {navCats.map((cat, i) => {
+            const slug = LABEL_TO_SLUG[cat.label] || cat.label.toLowerCase().replace(/\s+/g, '-')
+            const isLast = i === navCats.length - 1
+            const isActive = activeTab === i
+            return (
+              <Link
+                key={cat.label}
+                href={isLast ? '/products' : `/category/${slug}`}
+                className={`px-[18px] py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 transition-all ${
+                  isLast
+                    ? 'text-acid font-semibold border-transparent hover:border-acid'
+                    : isActive
+                      ? 'text-acid font-semibold border-acid'
+                      : 'text-chalk-3 border-transparent hover:text-chalk-2'
+                }`}
+              >
+                {cat.label}
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </nav>
+  )
+}

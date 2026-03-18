@@ -1,0 +1,7 @@
+[
+  { "icon": "💄", "name": "Makeup" }, { "icon": "🧴", "name": "Skincare" },
+  { "icon": "💆", "name": "Hair" }, { "icon": "🌸", "name": "Fragrance" },
+  { "icon": "🧔", "name": "Men" }, { "icon": "🛁", "name": "Bath & Body" },
+  { "icon": "🌿", "name": "Wellness" }, { "icon": "🎁", "name": "Gifts" },
+  { "icon": "✂️", "name": "Tools" }, { "icon": "🧪", "name": "Minis" }
+]

@@ -1,0 +1,10 @@
+{
+  "tagline": "For every day, for every mood, for every you. Beauty without compromise, delivered with care.",
+  "columns": [
+    { "title": "Maison", "links": ["Who We Are", "For You", "Offers", "Maison Exclusive", "Blog"] },
+    { "title": "Customer Care", "links": ["Help Centre", "FAQs", "Track Order", "Store Locator"] },
+    { "title": "Categories", "links": ["Makeup", "Skincare", "Hair", "Fragrance", "Wellness"] },
+    { "title": "Policies", "links": ["Terms & Conditions", "Privacy Policy", "Shipping Policy", "Returns Policy", "Rewards Policy"] }
+  ],
+  "bottomLinks": ["Privacy", "Terms", "Sitemap", "Accessibility"]
+}

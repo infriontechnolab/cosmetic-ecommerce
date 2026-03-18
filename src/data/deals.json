@@ -1,0 +1,42 @@
+[
+  {
+    "id": "ct-matte-lipstick",
+    "brand": "Charlotte Tilbury",
+    "name": "Matte Revolution Lipstick",
+    "price": "₹3,899",
+    "was": "₹4,499",
+    "pct": "−13%",
+    "image": "https://images.unsplash.com/photo-1586495777744-4e6232bf2176?w=600&q=80",
+    "bgColor": "#F5F0FF"
+  },
+  {
+    "id": "ordinary-ha-serum",
+    "brand": "The Ordinary",
+    "name": "Hyaluronic Acid 2% + B5",
+    "price": "₹699",
+    "was": "₹850",
+    "pct": "−18%",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600&q=80",
+    "bgColor": "#F0FFF8"
+  },
+  {
+    "id": "ysl-black-opium",
+    "brand": "YSL Beauty",
+    "name": "Black Opium EDP 50ml",
+    "price": "₹8,499",
+    "was": "₹9,999",
+    "pct": "−15%",
+    "image": "https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=80",
+    "bgColor": "#FFFBF0"
+  },
+  {
+    "id": "nars-blush-palette",
+    "brand": "NARS",
+    "name": "Orgasm Blush Palette",
+    "price": "₹3,299",
+    "was": "₹3,999",
+    "pct": "−18%",
+    "image": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&q=80",
+    "bgColor": "#FFF5F7"
+  }
+]
