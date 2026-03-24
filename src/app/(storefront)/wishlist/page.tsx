@@ -25,7 +25,9 @@ export default function WishlistPage() {
       <div className="max-w-[1440px] mx-auto px-6 py-8">
         {items.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🤍</div>
+            <div className="mb-4 flex justify-center" style={{ color: 'var(--color-terracotta)' }}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.3" stroke="currentColor" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            </div>
             <h2 className="text-xl font-bold text-chalk font-display mb-2">Your wishlist is empty</h2>
             <p className="text-chalk-3 text-sm mb-6">Heart products you love to save them here</p>
             <Link href="/products" className="px-6 py-3 bg-acid text-void text-sm font-bold hover:bg-acid-dim transition-colors uppercase tracking-[0.04em]">

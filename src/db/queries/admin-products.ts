@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { products, categories, brands } from "@/db/schema";
+import { products, categories, brands, productImages } from "@/db/schema";
 import { eq, like, or, isNull, sql, desc, asc, and } from "drizzle-orm";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -288,4 +288,80 @@ export async function adminDeleteProduct(id: number) {
     .update(products)
     .set({ deletedAt: new Date(), isActive: false })
     .where(eq(products.id, id));
+}
+
+// ─── Product Images ───────────────────────────────────────────────────────────
+
+export type AdminProductImage = {
+  id: number;
+  imageUrl: string;
+  thumbnailUrl: string | null;
+  altText: string | null;
+  displayOrder: number;
+  isPrimary: boolean;
+};
+
+export async function getAdminProductImages(productId: number): Promise<AdminProductImage[]> {
+  const rows = await db
+    .select({
+      id: productImages.id,
+      imageUrl: productImages.imageUrl,
+      thumbnailUrl: productImages.thumbnailUrl,
+      altText: productImages.altText,
+      displayOrder: productImages.displayOrder,
+      isPrimary: productImages.isPrimary,
+    })
+    .from(productImages)
+    .where(and(eq(productImages.productId, productId), isNull(productImages.deletedAt)))
+    .orderBy(desc(productImages.isPrimary), asc(productImages.displayOrder));
+
+  return rows.map((r) => ({
+    ...r,
+    id: Number(r.id),
+    displayOrder: Number(r.displayOrder),
+    isPrimary: Boolean(r.isPrimary),
+  }));
+}
+
+export async function addProductImage(
+  productId: number,
+  imageUrl: string,
+  altText?: string,
+  isPrimary?: boolean
+): Promise<number> {
+  // If marking as primary, unset any existing primary first
+  if (isPrimary) {
+    await db
+      .update(productImages)
+      .set({ isPrimary: false })
+      .where(and(eq(productImages.productId, productId), isNull(productImages.deletedAt)));
+  }
+
+  const result = await db.insert(productImages).values({
+    productId,
+    imageUrl,
+    altText: altText || null,
+    isPrimary: isPrimary ?? false,
+    displayOrder: 0,
+  });
+  return Number(result[0].insertId);
+}
+
+export async function setProductImagePrimary(productId: number, imageId: number): Promise<void> {
+  await db
+    .update(productImages)
+    .set({ isPrimary: false })
+    .where(and(eq(productImages.productId, productId), isNull(productImages.deletedAt)));
+
+  await db
+    .update(productImages)
+    .set({ isPrimary: true })
+    .where(eq(productImages.id, imageId));
+}
+
+export async function removeProductImage(imageId: number): Promise<void> {
+  await db
+    .update(productImages)
+    .set({ deletedAt: new Date() })
+    .where(eq(productImages.id, imageId));
 }

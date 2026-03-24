@@ -5,6 +5,7 @@ import {
   getTopProducts,
   getRevenueByCategory,
   getOrderStatusBreakdown,
+  getPaymentMethodBreakdown,
 } from "@/db/queries/admin-analytics"
 import RevenueChart from "./_components/RevenueChart"
 import HorizontalBarChart from "./_components/HorizontalBarChart"
@@ -44,13 +45,14 @@ export default async function AnalyticsPage({
   const currentPreset = preset ?? "30d"
   const { from, to } = presetDates(currentPreset)
 
-  const [summary, revenueByDay, topProducts, byCategory, statusBreakdown] =
+  const [summary, revenueByDay, topProducts, byCategory, statusBreakdown, paymentBreakdown] =
     await Promise.all([
       getSummaryStats(from, to),
       getRevenueByDay(from, to),
       getTopProducts(from, to, 10),
       getRevenueByCategory(from, to),
       getOrderStatusBreakdown(from, to),
+      getPaymentMethodBreakdown(from, to),
     ])
 
   return (
@@ -68,7 +70,7 @@ export default async function AnalyticsPage({
       />
 
       {/* Summary stat cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <StatCard
           label="Revenue"
           value={fmtCompact(summary.totalRevenue)}
@@ -76,7 +78,7 @@ export default async function AnalyticsPage({
           color="text-acid"
         />
         <StatCard
-          label="Orders"
+          label="Paid Orders"
           value={summary.totalOrders}
           title={`${summary.totalOrders} paid orders`}
           color="text-chalk"
@@ -87,11 +89,25 @@ export default async function AnalyticsPage({
           title={fmtCurrency(summary.avgOrderValue)}
           color="text-chalk"
         />
+      </div>
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <StatCard
           label="Items Sold"
           value={summary.totalItems}
           title={`${summary.totalItems} units`}
           color="text-chalk"
+        />
+        <StatCard
+          label="New Customers"
+          value={summary.newCustomers}
+          title={`${summary.newCustomers} sign-ups in period`}
+          color="text-blue-400"
+        />
+        <StatCard
+          label="Returns"
+          value={summary.totalReturns}
+          title={`${summary.totalReturns} return requests`}
+          color={summary.totalReturns > 0 ? "text-red-400" : "text-chalk-3"}
         />
       </div>
 
@@ -130,10 +146,43 @@ export default async function AnalyticsPage({
         </div>
       </div>
 
-      {/* Order status donut — untouched */}
-      <div className="bg-surface border border-border p-6">
-        <h2 className="text-sm font-semibold text-chalk mb-5">Order Status Breakdown</h2>
-        <DonutChart data={statusBreakdown} />
+      {/* Order status + payment method */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="bg-surface border border-border p-6">
+          <h2 className="text-sm font-semibold text-chalk mb-5">Order Status Breakdown</h2>
+          <DonutChart data={statusBreakdown} />
+        </div>
+
+        <div className="bg-surface border border-border p-6">
+          <h2 className="text-sm font-semibold text-chalk mb-5">Payment Method (Paid Orders)</h2>
+          {paymentBreakdown.length === 0 ? (
+            <div className="py-6 text-center text-chalk-3 text-sm">No paid orders in this period</div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {paymentBreakdown.map((pm) => {
+                const totalRevenue = paymentBreakdown.reduce((s, p) => s + p.revenue, 0)
+                const pct = totalRevenue > 0 ? Math.round((pm.revenue / totalRevenue) * 100) : 0
+                const label = pm.method === 'razorpay' ? 'Razorpay (Online)' : pm.method === 'cod' ? 'Cash on Delivery' : pm.method
+                const barColor = pm.method === 'razorpay' ? 'bg-purple-400' : 'bg-yellow-400'
+                return (
+                  <div key={pm.method}>
+                    <div className="flex justify-between items-baseline mb-1.5">
+                      <span className="text-xs font-semibold text-chalk capitalize">{label}</span>
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-chalk">{fmtCompact(pm.revenue)}</span>
+                        <span className="text-[11px] text-chalk-3 ml-2">{pm.count} order{pm.count !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                    <div className="h-2 bg-white/5 w-full">
+                      <div className={`h-full ${barColor} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="text-[11px] text-chalk-3 mt-0.5">{pct}% of revenue</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

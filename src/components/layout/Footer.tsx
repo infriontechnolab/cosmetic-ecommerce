@@ -1,14 +1,46 @@
+import Link from 'next/link'
 import { getFooterData } from '@/lib/api'
+
+const FOOTER_ROUTES: Record<string, string> = {
+  // Maison column
+  'Who We Are': '/about',
+  'For You': '/products',
+  'Offers': '/products?sort=discount',
+  'Maison Exclusive': '/products?brand=maison',
+  'Blog': '/blog',
+  // Customer Care
+  'Help Centre': '/contact',
+  'FAQs': '/contact',
+  'Track Order': '/account/orders',
+  'Store Locator': '/contact',
+  // Categories
+  'Makeup': '/category/makeup',
+  'Skincare': '/category/skincare',
+  'Hair': '/category/hair',
+  'Fragrance': '/category/fragrance',
+  'Wellness': '/category/wellness',
+  // Policies
+  'Terms & Conditions': '/terms',
+  'Privacy Policy': '/privacy',
+  'Shipping Policy': '/shipping-policy',
+  'Returns Policy': '/returns-policy',
+  'Rewards Policy': '/rewards-policy',
+  // Bottom
+  'Privacy': '/privacy',
+  'Terms': '/terms',
+  'Sitemap': '/sitemap.xml',
+  'Accessibility': '/accessibility',
+}
 
 export default async function Footer() {
   const footer = await getFooterData()
 
   return (
-    <footer className="bg-void-2 border-t border-border pt-[52px] pb-8 px-6">
+    <footer className="bg-void-2 border-t border-border pt-10 sm:pt-[52px] pb-8 px-4 sm:px-6">
       <div className="max-w-[1440px] mx-auto">
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-12 pb-12 border-b border-border">
-          {/* Brand col */}
-          <div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-8 lg:gap-12 pb-12 border-b border-border">
+          {/* Brand col — full width on mobile */}
+          <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <div className="text-2xl font-extrabold text-chalk tracking-[-0.5px] font-display">MAISON<span className="text-acid">.</span></div>
             <div className="text-[13px] text-chalk-3 leading-[1.7] mt-3 max-w-[240px]">{footer.tagline}</div>
             <div className="mt-5">
@@ -25,7 +57,11 @@ export default async function Footer() {
               <div className="text-[12px] font-extrabold text-chalk-2 uppercase tracking-[0.1em] mb-4">{col.title}</div>
               <ul className="flex flex-col gap-[10px]">
                 {col.links.map(link => (
-                  <li key={link}><a href="#" className="text-[13px] text-chalk-3 font-medium hover:text-acid transition-colors">{link}</a></li>
+                  <li key={link}>
+                    <Link href={FOOTER_ROUTES[link] ?? '#'} className="text-[13px] text-chalk-3 font-medium hover:text-acid transition-colors">
+                      {link}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -35,7 +71,9 @@ export default async function Footer() {
           <div className="text-xs text-chalk-3 font-medium">© 2025 Maison Beauty. All rights reserved.</div>
           <div className="flex gap-5 flex-wrap">
             {footer.bottomLinks.map(link => (
-              <a key={link} href="#" className="text-xs text-chalk-3 hover:text-acid transition-colors">{link}</a>
+              <Link key={link} href={FOOTER_ROUTES[link] ?? '#'} className="text-xs text-chalk-3 hover:text-acid transition-colors">
+                {link}
+              </Link>
             ))}
           </div>
         </div>

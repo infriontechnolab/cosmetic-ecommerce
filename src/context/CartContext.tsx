@@ -5,9 +5,9 @@ import type { CartItem } from '@/types/product'
 interface CartContextValue {
   items: CartItem[]
   count: number
-  addItem: (item: Omit<CartItem, 'quantity'>) => void
-  removeItem: (id: string) => void
-  updateQty: (id: string, qty: number) => void
+  addItem: (item: Omit<CartItem, 'quantity' | 'lineKey'>) => void
+  removeItem: (lineKey: string) => void
+  updateQty: (lineKey: string, qty: number) => void
   clearCart: () => void
 }
 
@@ -32,23 +32,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [items])
 
-  const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
+  function makeLineKey(id: string, shade?: string, size?: string) {
+    return [id, shade ?? '', size ?? ''].join(':')
+  }
+
+  const addItem = useCallback((item: Omit<CartItem, 'quantity' | 'lineKey'>) => {
+    const lineKey = makeLineKey(item.id, item.shade, item.size)
     setItems(prev => {
-      const existing = prev.find(i => i.id === item.id)
+      const existing = prev.find(i => i.lineKey === lineKey)
       if (existing) {
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i)
+        return prev.map(i => i.lineKey === lineKey ? { ...i, quantity: i.quantity + 1 } : i)
       }
-      return [...prev, { ...item, quantity: 1 }]
+      return [...prev, { ...item, lineKey, quantity: 1 }]
     })
   }, [])
 
-  const removeItem = useCallback((id: string) => {
-    setItems(prev => prev.filter(i => i.id !== id))
+  const removeItem = useCallback((lineKey: string) => {
+    setItems(prev => prev.filter(i => i.lineKey !== lineKey))
   }, [])
 
-  const updateQty = useCallback((id: string, qty: number) => {
+  const updateQty = useCallback((lineKey: string, qty: number) => {
     if (qty < 1) return
-    setItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i))
+    setItems(prev => prev.map(i => i.lineKey === lineKey ? { ...i, quantity: qty } : i))
   }, [])
 
   const clearCart = useCallback(() => setItems([]), [])

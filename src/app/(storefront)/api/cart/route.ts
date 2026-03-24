@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
 
     if (isNew) {
       response.cookies.set(SESSION_COOKIE, sessionId, {
-        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: SESSION_TTL,

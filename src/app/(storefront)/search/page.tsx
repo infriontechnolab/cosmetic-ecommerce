@@ -36,12 +36,16 @@ export default async function SearchPage({
       <div className="max-w-[1440px] mx-auto px-6 py-8">
         {!query ? (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">🔍</div>
+            <div className="mb-4 flex justify-center" style={{ color: 'var(--color-terracotta)' }}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.3" stroke="currentColor" className="w-12 h-12"><circle cx="11" cy="11" r="7" strokeLinecap="round"/><line x1="16.5" y1="16.5" x2="21" y2="21" strokeLinecap="round"/></svg>
+            </div>
             <p className="text-chalk-2 text-lg font-semibold">Enter a search term above</p>
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">😕</div>
+            <div className="mb-4 flex justify-center" style={{ color: 'var(--color-terracotta)' }}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.3" stroke="currentColor" className="w-12 h-12"><circle cx="11" cy="11" r="7" strokeLinecap="round"/><line x1="16.5" y1="16.5" x2="21" y2="21" strokeLinecap="round"/><line x1="8" y1="11" x2="14" y2="11" strokeLinecap="round"/></svg>
+            </div>
             <p className="text-chalk-2 text-lg font-semibold mb-2">No results for &quot;{query}&quot;</p>
             <p className="text-chalk-3 text-sm mb-6">Try different keywords or browse our full collection</p>
             <Link href="/products" className="px-6 py-3 bg-acid text-void text-sm font-bold hover:bg-acid-dim transition-colors uppercase tracking-[0.04em]">

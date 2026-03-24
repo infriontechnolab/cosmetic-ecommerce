@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { paymentTransactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { markOrderPaid, updatePaymentTransaction } from "@/db/queries/payments";
+import { sendOrderConfirmation } from "@/lib/email";
 
 /**
  * POST /api/payments/razorpay/verify
@@ -47,8 +48,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Mark order as paid
+    // Mark order as paid + award loyalty points
     await markOrderPaid(orderId);
+    sendOrderConfirmation(orderId); // fire-and-forget
 
     return NextResponse.json({ success: true });
   } catch (err) {

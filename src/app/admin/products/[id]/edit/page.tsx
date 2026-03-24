@@ -3,9 +3,11 @@ import {
   getAdminProductById,
   getAllCategories,
   getAllBrands,
+  getAdminProductImages,
 } from "@/db/queries/admin-products";
 import { updateProduct } from "@/lib/admin-actions";
 import ProductForm from "../../_components/ProductForm";
+import ProductImageManager from "../../_components/ProductImageManager";
 import Link from "next/link";
 
 export const metadata = { title: "Edit Product — Admin" };
@@ -21,10 +23,11 @@ export default async function EditProductPage({
   const sp = await searchParams;
   const productId = parseInt(id);
 
-  const [product, categories, brands] = await Promise.all([
+  const [product, categories, brands, images] = await Promise.all([
     getAdminProductById(productId),
     getAllCategories(),
     getAllBrands(),
+    getAdminProductImages(productId),
   ]);
 
   if (!product) notFound();
@@ -51,6 +54,8 @@ export default async function EditProductPage({
         action={action}
         saved={sp.saved === "1"}
       />
+
+      <ProductImageManager productId={productId} initialImages={images} />
     </div>
   );
 }

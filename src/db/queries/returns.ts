@@ -293,6 +293,51 @@ export async function markTransactionRefunded(orderId: number, refundAmount: num
     .where(eq(orders.id, orderId));
 }
 
+// ─── User: get all returns for a user ────────────────────────────────────────
+
+export async function getReturnsByUser(userId: number): Promise<
+  Array<{
+    id: number;
+    returnNumber: string;
+    status: ReturnStatus;
+    reason: ReturnReason;
+    refundMethod: RefundMethod | null;
+    refundAmount: string | null;
+    orderNumber: string;
+    orderId: number;
+    createdAt: Date | null;
+  }>
+> {
+  const rows = await db
+    .select({
+      id: returnRequests.id,
+      returnNumber: returnRequests.returnNumber,
+      status: returnRequests.status,
+      reason: returnRequests.reason,
+      refundMethod: returnRequests.refundMethod,
+      refundAmount: returnRequests.refundAmount,
+      orderNumber: orders.orderNumber,
+      orderId: returnRequests.orderId,
+      createdAt: returnRequests.createdAt,
+    })
+    .from(returnRequests)
+    .innerJoin(orders, eq(returnRequests.orderId, orders.id))
+    .where(and(eq(returnRequests.userId, userId), isNull(returnRequests.deletedAt)))
+    .orderBy(desc(returnRequests.createdAt));
+
+  return rows as Array<{
+    id: number;
+    returnNumber: string;
+    status: ReturnStatus;
+    reason: ReturnReason;
+    refundMethod: RefundMethod | null;
+    refundAmount: string | null;
+    orderNumber: string;
+    orderId: number;
+    createdAt: Date | null;
+  }>;
+}
+
 // ─── User: get returns for an order ──────────────────────────────────────────
 
 export async function getReturnForOrder(

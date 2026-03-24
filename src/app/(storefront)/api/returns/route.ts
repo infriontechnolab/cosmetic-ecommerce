@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { createReturnRequest, type ReturnReason, type RefundMethod } from "@/db/queries/returns";
+import { createReturnRequest, getReturnsByUser, type ReturnReason, type RefundMethod } from "@/db/queries/returns";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const returns = await getReturnsByUser(Number(session.user.id));
+  return NextResponse.json({ returns });
+}
 
 export async function POST(req: NextRequest) {
   try {

@@ -2,8 +2,16 @@ import { notFound } from 'next/navigation'
 import { getProducts } from '@/lib/api'
 import ProductImageGallery from './ProductImageGallery'
 import ProductCard from '@/components/ui/ProductCard'
-import AddToBagButton from './AddToBagButton'
+import ShadeAndBagClient from './ShadeAndBagClient'
+import WishlistButton from './WishlistButton'
+import SizeSelectorClient from './_components/SizeSelectorClient'
 import ProductTabsClient from './ProductTabsClient'
+import ReviewsSection from './_components/ReviewsSection'
+import { db } from '@/db'
+import { products as productsTable } from '@/db/schema'
+import { and, eq, sql } from 'drizzle-orm'
+import { getProductReviews } from '@/db/queries/reviews'
+import { getProductImages } from '@/db/queries/products'
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -13,6 +21,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product) notFound()
 
   const related = products.filter(p => p.id !== product.id).slice(0, 4)
+
+  // Resolve numeric product id for reviews
+  const dbProductRows = await db
+    .select({ id: productsTable.id })
+    .from(productsTable)
+    .where(and(eq(productsTable.slug, slug), sql`${productsTable.deletedAt} IS NULL`))
+    .limit(1)
+  const numericProductId = dbProductRows[0]?.id
+  const [{ reviews: initialReviews, total: initialTotal }, galleryImages] = await Promise.all([
+    numericProductId
+      ? getProductReviews(numericProductId, { page: 1 })
+      : Promise.resolve({ reviews: [], total: 0 }),
+    numericProductId
+      ? getProductImages(numericProductId)
+      : Promise.resolve([]),
+  ])
 
   const description = product.description ?? 'A luxurious formula crafted with science-backed ingredients to deliver visible results. Suitable for all skin types, this product is dermatologist-tested and free from harmful additives.'
   const ingredients = product.ingredients ?? 'Aqua, Glycerin, Niacinamide (5%), Hyaluronic Acid (3%), Peptide Complex, Ceramides NP, Squalane, Panthenol, Allantoin, Phenoxyethanol.'
@@ -32,12 +56,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </div>
 
       {/* Product hero */}
-      <div className="max-w-[1440px] mx-auto px-6 py-12 grid grid-cols-2 gap-16">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
         {/* Gallery */}
         <ProductImageGallery
           image={product.image}
           name={product.name}
           bgColor={product.bgColor}
+          thumbs={galleryImages.length > 0 ? galleryImages : undefined}
         />
 
         {/* Info */}
@@ -61,43 +86,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {product.priceOff && <span className="text-sm font-bold text-acid">{product.priceOff}</span>}
           </div>
 
-          {/* Shades */}
-          {product.shades && product.shades.length > 0 && (
-            <div className="mt-5 pb-5 border-b border-border">
-              <div className="text-xs font-bold text-chalk-2 uppercase tracking-[0.08em] mb-3">Select Shade</div>
-              <div className="flex gap-2 flex-wrap">
-                {product.shades.map((sh, i) => (
-                  <button
-                    key={i}
-                    className="w-8 h-8 border-2 border-transparent hover:border-acid transition-all hover:scale-110"
-                    style={{ background: sh.color }}
-                  />
-                ))}
+          {/* Sizes + Shade selector + Add to Bag */}
+          {product.sizes && product.sizes.length > 0
+            ? <SizeSelectorClient sizes={product.sizes} product={product} />
+            : (
+              <div className="flex gap-3 mt-6">
+                <div className="flex-1 flex flex-col">
+                  <ShadeAndBagClient product={product} />
+                </div>
+                <WishlistButton product={product} />
               </div>
-            </div>
-          )}
-
-          {/* Sizes */}
-          {product.sizes && product.sizes.length > 0 && (
-            <div className="mt-5 pb-5 border-b border-border">
-              <div className="text-xs font-bold text-chalk-2 uppercase tracking-[0.08em] mb-3">Select Size</div>
-              <div className="flex gap-2">
-                {product.sizes.map(size => (
-                  <button key={size} className="px-4 py-2 border border-border text-sm text-chalk-2 hover:border-acid hover:text-acid transition-all uppercase tracking-[0.04em]">
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 mt-6">
-            <AddToBagButton product={product} />
-            <button className="flex-1 py-[14px] border border-border text-chalk-2 text-sm font-bold hover:border-acid hover:text-acid transition-all uppercase tracking-[0.04em]">
-              SAVE TO WISHLIST
-            </button>
-          </div>
+            )
+          }
 
           {/* Trust signals */}
           <div className="mt-5 flex flex-col gap-2">
@@ -120,10 +120,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
 
+      {/* Reviews */}
+      <ReviewsSection
+        productSlug={slug}
+        initialReviews={initialReviews.map(r => ({
+          ...r,
+          createdAt: r.createdAt ? r.createdAt.toISOString() : null,
+        }))}
+        initialTotal={initialTotal}
+        avgRating={typeof product.rating === 'number' ? product.rating : Number(product.rating) || 0}
+      />
+
       {/* You may also like */}
       <div className="max-w-[1440px] mx-auto px-6 py-12 border-t border-border">
         <h2 className="text-[20px] font-extrabold text-chalk tracking-[-0.04em] font-display uppercase mb-6">You May <span className="text-acid">Also Like</span></h2>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {related.map(p => <ProductCard key={p.id} {...p} />)}
         </div>
       </div>

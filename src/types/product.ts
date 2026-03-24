@@ -35,6 +35,7 @@ export interface Deal {
 }
 
 export interface CartItem {
+  lineKey: string   // `${id}:${shade ?? ''}:${size ?? ''}`
   id: string
   brand: string
   name: string

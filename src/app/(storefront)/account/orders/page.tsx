@@ -116,7 +116,9 @@ export default async function OrdersPage({
       <div className="max-w-[860px] mx-auto px-6 py-8">
         {orders.length === 0 ? (
           <div className="bg-surface border border-border p-16 text-center">
-            <div className="text-5xl mb-4">📦</div>
+            <div className="mb-4 flex justify-center" style={{ color: 'var(--color-terracotta)' }}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.3" stroke="currentColor" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8L12 3L3 8V16L12 21L21 16V8Z"/><path strokeLinecap="round" d="M3 8L12 13L21 8"/><line x1="12" y1="13" x2="12" y2="21" strokeLinecap="round"/></svg>
+            </div>
             <p className="text-chalk-2 font-semibold mb-1">No orders yet</p>
             <p className="text-chalk-3 text-sm mb-6">
               Your order history will appear here

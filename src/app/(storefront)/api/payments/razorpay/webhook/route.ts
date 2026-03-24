@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { paymentTransactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { markOrderPaid, markOrderPaymentFailed, updatePaymentTransaction } from "@/db/queries/payments";
+import { sendOrderConfirmation } from "@/lib/email";
 
 /**
  * POST /api/payments/razorpay/webhook
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
         gatewayResponse: JSON.stringify(payment),
       });
       await markOrderPaid(Number(txn.orderId));
+      sendOrderConfirmation(Number(txn.orderId)); // fire-and-forget
     } else if (event.event === "payment.failed") {
       await updatePaymentTransaction(txn.id, {
         status: "failed",

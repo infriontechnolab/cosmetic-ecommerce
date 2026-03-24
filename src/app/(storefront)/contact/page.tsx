@@ -4,7 +4,32 @@ import Link from 'next/link'
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+
+  async function handleSend() {
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return
+    setSending(true)
+    setError('')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        setSent(true)
+      } else {
+        const data = await res.json()
+        setError(data.error ?? 'Something went wrong. Please try again.')
+      }
+    } catch {
+      setError('Could not send message. Please try again.')
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-void">
@@ -19,7 +44,9 @@ export default function ContactPage() {
 
         {sent ? (
           <div className="bg-surface border border-acid p-8 text-center">
-            <div className="text-4xl mb-3">✅</div>
+            <div className="mb-3 flex justify-center" style={{ color: 'var(--color-sage)' }}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.3" stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path strokeLinecap="round" strokeLinejoin="round" d="M22 4L12 14.01l-3-3"/></svg>
+            </div>
             <h2 className="text-lg font-bold text-chalk mb-1">Message Sent!</h2>
             <p className="text-chalk-3 text-sm">We&apos;ll get back to you within 24 hours.</p>
           </div>
@@ -67,11 +94,15 @@ export default function ContactPage() {
                 />
               </div>
             </div>
+            {error && (
+              <p className="mt-3 text-sm text-red-400">{error}</p>
+            )}
             <button
-              onClick={() => { if (form.name && form.email && form.message) setSent(true) }}
-              className="mt-5 px-8 py-3 bg-acid text-void text-sm font-bold hover:bg-acid-dim transition-colors uppercase tracking-[0.04em]"
+              onClick={handleSend}
+              disabled={sending || !form.name.trim() || !form.email.trim() || !form.message.trim()}
+              className="mt-5 px-8 py-3 bg-acid text-void text-sm font-bold hover:bg-acid-dim transition-colors uppercase tracking-[0.04em] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send Message →
+              {sending ? 'Sending…' : 'Send Message →'}
             </button>
           </div>
         )}

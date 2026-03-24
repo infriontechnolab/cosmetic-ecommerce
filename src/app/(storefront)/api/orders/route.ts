@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createOrder, type CreateOrderInput } from "@/db/queries/orders";
+import { getUserProfile, deductLoyaltyPoints } from "@/db/queries/user-profile";
+import { markOrderPaid } from "@/db/queries/payments";
+import { sendOrderConfirmation } from "@/lib/email";
 
 /**
  * POST /api/orders
@@ -17,6 +20,7 @@ export async function POST(req: NextRequest) {
       paymentMethod: "razorpay" | "cod";
       discountAmount?: number;
       discountCodeId?: number;
+      pointsRedeemed?: number;
     };
 
     if (!body.items?.length) {
@@ -30,11 +34,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate points redemption
+    const pointsRedeemed = Math.max(0, Math.floor(body.pointsRedeemed ?? 0));
+    if (pointsRedeemed > 0) {
+      if (!userId) {
+        return NextResponse.json({ error: "Sign in to redeem points" }, { status: 401 });
+      }
+      const profile = await getUserProfile(userId);
+      if (!profile || profile.loyaltyPoints < pointsRedeemed) {
+        return NextResponse.json({ error: "Insufficient loyalty points" }, { status: 400 });
+      }
+    }
+
     const subtotal = body.items.reduce(
       (sum, i) => sum + i.unitPrice * i.quantity,
       0
     );
-    const discountAmount = body.discountAmount ?? 0;
+    const couponDiscount = Math.min(body.discountAmount ?? 0, subtotal);
+    const pointsDiscount = Math.floor(pointsRedeemed / 100); // 100 pts = ₹1
+    // Cap combined discount so taxable amount never goes below 0
+    const discountAmount = Math.min(couponDiscount + pointsDiscount, subtotal);
     const shippingAmount = subtotal - discountAmount >= 999 ? 0 : 99;
 
     const { orderId, orderNumber } = await createOrder({
@@ -47,6 +66,18 @@ export async function POST(req: NextRequest) {
       discountCodeId: body.discountCodeId,
       shippingAmount,
     });
+
+    // Deduct redeemed points after order is created
+    if (pointsRedeemed > 0 && userId) {
+      await deductLoyaltyPoints(userId, pointsRedeemed);
+    }
+
+    // COD orders are confirmed immediately — award loyalty points + send email
+    // (Razorpay orders handle both via the webhook/verify flow)
+    if (body.paymentMethod === "cod") {
+      await markOrderPaid(orderId);
+      sendOrderConfirmation(orderId); // fire-and-forget, never blocks response
+    }
 
     return NextResponse.json({ orderId, orderNumber, shippingAmount });
   } catch (err) {

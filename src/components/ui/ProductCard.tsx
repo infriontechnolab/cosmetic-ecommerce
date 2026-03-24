@@ -24,9 +24,9 @@ interface ProductCardProps {
 
 const badgeCls = {
   new:  'bg-void-3 text-chalk border border-border-hi',
-  sale: 'bg-red text-white',
-  hot:  'bg-red text-white',
-  low:  'bg-[#1A3A2A] text-[#4ADE80]',
+  sale: 'bg-red text-ivory',
+  hot:  'bg-red text-ivory',
+  low:  'bg-sage-light text-sage-dark',
 }
 
 export default function ProductCard({ id, brand, name, rating, reviews, price, priceWas, priceOff, badge, gwp, shades, image, bgColor }: ProductCardProps) {
@@ -51,7 +51,7 @@ export default function ProductCard({ id, brand, name, rating, reviews, price, p
   return (
     <div
       className="bg-surface border border-border overflow-hidden cursor-pointer transition-all relative"
-      style={{ transform: hovered ? 'translateY(-3px)' : 'none', boxShadow: hovered ? '0 8px 32px rgba(0,0,0,.5)' : 'none', borderColor: hovered ? '#3D3D3D' : '#2A2A2A' }}
+      style={{ transform: hovered ? 'translateY(-3px)' : 'none', borderColor: hovered ? 'var(--color-terracotta)' : 'var(--color-border)' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -94,7 +94,7 @@ export default function ProductCard({ id, brand, name, rating, reviews, price, p
 
           {/* Quick add */}
           <div
-            className={`absolute left-0 right-0 z-[4] px-[10px] py-[10px] bg-[#0A0A0A] transition-all duration-300 ${gwp ? 'bottom-[34px]' : 'bottom-0'}`}
+            className={`absolute left-0 right-0 z-[4] px-[10px] py-[10px] bg-deep-wine transition-all duration-300 ${gwp ? 'bottom-[34px]' : 'bottom-0'}`}
             style={{ opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(100%)', pointerEvents: hovered ? 'auto' : 'none' }}
           >
             {shades && (
@@ -122,7 +122,7 @@ export default function ProductCard({ id, brand, name, rating, reviews, price, p
       {/* Info */}
       <div className="p-[12px_14px_14px]">
         <div className="text-[11px] font-semibold text-chalk-3 uppercase tracking-[0.08em]">{brand}</div>
-        <div className="text-sm font-semibold text-chalk leading-[1.3] mt-1">{name}</div>
+        <div className="text-sm font-semibold text-chalk leading-[1.3] mt-1 font-display">{name}</div>
         <div className="flex items-center gap-[5px] mt-[6px]">
           <div className="flex items-center gap-[3px] bg-acid text-void px-[6px] py-[2px] text-[11px] font-bold">
             <svg className="w-[10px] h-[10px] fill-void" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -131,7 +131,7 @@ export default function ProductCard({ id, brand, name, rating, reviews, price, p
           <span className="text-xs text-chalk-3">{reviews} reviews</span>
         </div>
         <div className="flex items-center gap-[7px] mt-2">
-          <span className="text-[15px] font-extrabold text-chalk">{price}</span>
+          <span className="text-[15px] font-semibold text-chalk">{price}</span>
           {priceWas && <span className="text-[13px] text-chalk-3 line-through">{priceWas}</span>}
           {priceOff && <span className="text-xs font-bold text-acid">{priceOff}</span>}
         </div>

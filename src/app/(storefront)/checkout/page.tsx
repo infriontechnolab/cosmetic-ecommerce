@@ -53,12 +53,12 @@ function StepIndicator({ current }: { current: Step }) {
       {steps.map((s, i) => (
         <div key={s.key} className="flex items-center">
           <div className={`flex items-center gap-2 px-4 py-[10px] text-xs font-bold uppercase tracking-[0.06em] border transition-all ${
-            i < idx ? 'border-acid/30 text-chalk-3 bg-[rgba(204,255,0,.04)]'
-            : i === idx ? 'border-acid text-acid bg-[rgba(204,255,0,.08)]'
+            i < idx ? 'border-acid/30 text-chalk-3 bg-[rgba(0,193,112,.04)]'
+            : i === idx ? 'border-acid text-acid bg-[rgba(0,193,112,.08)]'
             : 'border-border text-chalk-3'
           }`}>
             <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-extrabold border ${
-              i < idx ? 'border-acid/50 text-acid bg-[rgba(204,255,0,.1)]'
+              i < idx ? 'border-acid/50 text-acid bg-[rgba(0,193,112,.1)]'
               : i === idx ? 'border-acid text-void bg-acid'
               : 'border-border text-chalk-3'
             }`}>{i < idx ? '✓' : i + 1}</span>
@@ -96,6 +96,10 @@ export default function CheckoutPage() {
     code: string; discountId: number; amount: number; message: string
   } | null>(null)
 
+  // Loyalty points state
+  const [loyaltyBalance, setLoyaltyBalance] = useState(0)
+  const [pointsRedeemed, setPointsRedeemed] = useState(0)
+
   // Order state
   const [placing, setPlacing] = useState(false)
   const [placeError, setPlaceError] = useState('')
@@ -110,13 +114,30 @@ export default function CheckoutPage() {
     return () => { document.body.removeChild(script) }
   }, [])
 
+  // Fetch loyalty points balance for logged-in users
+  useEffect(() => {
+    if (!session?.user) return
+    fetch('/api/profile')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.loyaltyPoints) setLoyaltyBalance(data.loyaltyPoints) })
+      .catch(() => {})
+  }, [session])
+
   // ─── Totals ────────────────────────────────────────────────────────────────
   const subtotal = items.reduce((sum, i) => sum + parsePrice(i.price) * i.quantity, 0)
   const discountAmount = promoData?.amount ?? 0
-  const taxableAmount = subtotal - discountAmount
+  const pointsDiscount = Math.floor(pointsRedeemed / 100) // 100 pts = ₹1
+  const remainingAfterCoupon = Math.max(0, subtotal - discountAmount)
+  const taxableAmount = Math.max(0, remainingAfterCoupon - pointsDiscount)
   const shippingAmount = taxableAmount >= 999 ? 0 : 99
   const taxAmount = Math.round(taxableAmount * 0.18 * 100) / 100
   const total = taxableAmount + taxAmount + shippingAmount
+  // Cap redeemable points: can't discount more than what's left after coupon
+  const maxPointsDiscount = remainingAfterCoupon // ₹ ceiling
+  const maxRedeemable = Math.min(
+    Math.floor(loyaltyBalance / 100) * 100,
+    Math.floor(maxPointsDiscount) * 100  // convert ₹ ceiling back to points
+  )
 
   const allFieldsFilled = (
     delivery.fullName.trim() &&
@@ -176,6 +197,7 @@ export default function CheckoutPage() {
       paymentMethod: payMethod === 'cod' ? 'cod' : 'razorpay',
       discountAmount: promoData?.amount,
       discountCodeId: promoData?.discountId,
+      pointsRedeemed: pointsRedeemed > 0 ? pointsRedeemed : undefined,
     }
 
     try {
@@ -224,7 +246,7 @@ export default function CheckoutPage() {
         description: `Order ${orderData.orderNumber}`,
         order_id: rzpData.razorpayOrderId,
         prefill: rzpData.prefill,
-        theme: { color: '#ccff00' },
+        theme: { color: '#00C170' },
         handler: async (response: {
           razorpay_payment_id: string
           razorpay_order_id: string
@@ -284,7 +306,7 @@ export default function CheckoutPage() {
   // ─── Order summary sidebar ─────────────────────────────────────────────────
   function OrderSidebar({ action }: { action: React.ReactNode }) {
     return (
-      <div className="bg-surface border border-border p-6 h-fit sticky top-[120px]">
+      <div className="bg-surface border border-border p-6 h-fit lg:sticky lg:top-[120px]">
         <h3 className="text-sm font-bold text-chalk uppercase tracking-[0.06em] mb-4">Order Summary</h3>
         <div className="flex flex-col gap-2.5 text-sm mb-4">
           <div className="flex justify-between">
@@ -295,6 +317,12 @@ export default function CheckoutPage() {
             <div className="flex justify-between text-acid">
               <span>Promo ({promoData.code})</span>
               <span>−{fmt(discountAmount)}</span>
+            </div>
+          )}
+          {pointsRedeemed > 0 && (
+            <div className="flex justify-between text-acid">
+              <span>Points ({pointsRedeemed} pts)</span>
+              <span>−{fmt(pointsDiscount)}</span>
             </div>
           )}
           <div className="flex justify-between">
@@ -327,7 +355,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-void">
-      <div className="max-w-[1440px] mx-auto px-6 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8">
         <div className="mb-6">
           <div className="text-xs font-semibold text-chalk-3 uppercase tracking-[0.1em] mb-2">
             <Link href="/" className="hover:text-acid transition-colors">Home</Link> /{' '}
@@ -340,7 +368,7 @@ export default function CheckoutPage() {
 
         {/* ── STEP 1: SUMMARY ── */}
         {step === 'summary' && (
-          <div className="grid grid-cols-[1fr_380px] gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
             <div>
               <h2 className="text-lg font-bold text-chalk mb-4 font-display">Your Bag ({count} items)</h2>
               <div className="flex flex-col gap-3">
@@ -375,7 +403,7 @@ export default function CheckoutPage() {
                   />
                   {promoData ? (
                     <button
-                      onClick={() => { setPromoData(null); setPromoInput('') }}
+                      onClick={() => { setPromoData(null); setPromoInput(''); setPointsRedeemed(0) }}
                       className="px-4 py-[10px] border border-border text-chalk-3 text-xs font-semibold hover:border-red-400 hover:text-red-400 transition-colors"
                     >
                       Remove
@@ -393,6 +421,40 @@ export default function CheckoutPage() {
                 {promoError && <p className="text-xs text-red-400 mt-2">{promoError}</p>}
                 {promoData && <p className="text-xs text-acid mt-2">✓ {promoData.message}</p>}
               </div>
+
+              {/* Loyalty points redemption — only for logged-in users with a balance */}
+              {session?.user && loyaltyBalance >= 100 && (
+                <div className="mt-4 bg-surface border border-border p-5">
+                  <p className="text-xs font-semibold text-chalk-3 uppercase tracking-wider mb-3">
+                    Redeem Points
+                    <span className="ml-2 text-chalk font-normal normal-case tracking-normal">
+                      {loyaltyBalance} pts available = {fmt(Math.floor(loyaltyBalance / 100))} off
+                    </span>
+                  </p>
+                  {pointsRedeemed > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-acid font-semibold">
+                        ✓ {pointsRedeemed} points applied (−{fmt(pointsDiscount)})
+                      </p>
+                      <button
+                        onClick={() => setPointsRedeemed(0)}
+                        className="text-xs text-chalk-3 hover:text-red-400 font-semibold transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPointsRedeemed(maxRedeemable)}
+                        className="px-4 py-[10px] bg-acid text-void text-xs font-bold hover:bg-acid-dim transition-colors"
+                      >
+                        Use all {maxRedeemable} pts (−{fmt(Math.floor(maxRedeemable / 100))})
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <OrderSidebar
@@ -410,11 +472,11 @@ export default function CheckoutPage() {
 
         {/* ── STEP 2: DELIVERY ── */}
         {step === 'delivery' && (
-          <div className="grid grid-cols-[1fr_380px] gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
             <div>
               <h2 className="text-lg font-bold text-chalk mb-4 font-display">Delivery Address</h2>
               <div className="bg-surface border border-border p-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-chalk-3 uppercase tracking-[0.06em] mb-1">Full Name *</label>
                     <input value={delivery.fullName} onChange={field('fullName')} placeholder="Jane Doe" className={inputCls} />
@@ -467,25 +529,25 @@ export default function CheckoutPage() {
 
         {/* ── STEP 3: PAYMENT ── */}
         {step === 'payment' && (
-          <div className="grid grid-cols-[1fr_380px] gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
             <div>
               <h2 className="text-lg font-bold text-chalk mb-4 font-display">Payment Method</h2>
               <div className="bg-surface border border-border p-6">
                 <div className="flex flex-col gap-3">
                   {([
-                    { value: 'cod' as const, label: 'Cash on Delivery', sub: 'Pay when your order arrives', icon: '📦' },
-                    { value: 'upi' as const, label: 'UPI / Razorpay', sub: 'Pay instantly — UPI, Card, NetBanking', icon: '📱' },
+                    { value: 'cod' as const, label: 'Cash on Delivery', sub: 'Pay when your order arrives', icon: <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.4" stroke="currentColor" className="w-6 h-6"><rect x="2" y="6" width="20" height="14" rx="2" strokeLinecap="round"/><path strokeLinecap="round" d="M2 11H22"/><circle cx="17" cy="15.5" r="1.5" strokeLinecap="round"/></svg> },
+                    { value: 'upi' as const, label: 'UPI / Razorpay', sub: 'Pay instantly — UPI, Card, NetBanking', icon: <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.4" stroke="currentColor" className="w-6 h-6"><rect x="7" y="2" width="10" height="20" rx="2" strokeLinecap="round"/><line x1="7" y1="6" x2="17" y2="6" strokeLinecap="round"/><line x1="7" y1="18" x2="17" y2="18" strokeLinecap="round"/><circle cx="12" cy="20.5" r="0.6" fill="currentColor"/></svg> },
                   ]).map(opt => (
                     <button
                       key={opt.value}
                       onClick={() => setPayMethod(opt.value)}
                       className={`flex items-center gap-4 p-4 border text-left transition-all ${
                         payMethod === opt.value
-                          ? 'border-acid bg-[rgba(204,255,0,.06)]'
+                          ? 'border-acid bg-[rgba(140,90,60,0.06)]'
                           : 'border-border hover:border-border-hi'
                       }`}
                     >
-                      <span className="text-2xl">{opt.icon}</span>
+                      <span style={{ color: 'var(--color-terracotta)' }}>{opt.icon}</span>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-chalk">{opt.label}</span>
@@ -538,7 +600,7 @@ export default function CheckoutPage() {
         {/* ── STEP 4: CONFIRMED ── */}
         {step === 'confirmed' && confirmedOrder && (
           <div className="max-w-[600px] mx-auto text-center py-10">
-            <div className="w-16 h-16 bg-[rgba(204,255,0,.12)] border border-acid flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-[rgba(0,193,112,.12)] border border-acid flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 stroke-acid" fill="none" strokeWidth="2" viewBox="0 0 24 24">
                 <polyline points="20 6 9 17 4 12" />
               </svg>

@@ -12,15 +12,21 @@ import {
   Boxes,
   RotateCcw,
   TrendingUp,
+  Tag,
+  Users,
+  Star,
 } from "lucide-react"
 
 const NAV = [
-  { href: "/admin",           label: "Dashboard", Icon: LayoutDashboard, exact: true  },
-  { href: "/admin/products",  label: "Products",  Icon: Package                       },
-  { href: "/admin/orders",    label: "Orders",    Icon: ShoppingCart                  },
-  { href: "/admin/inventory", label: "Inventory", Icon: Boxes                         },
-  { href: "/admin/returns",   label: "Returns",   Icon: RotateCcw                     },
-  { href: "/admin/analytics", label: "Analytics", Icon: TrendingUp                    },
+  { href: "/admin",             label: "Dashboard", Icon: LayoutDashboard, exact: true  },
+  { href: "/admin/products",    label: "Products",  Icon: Package                       },
+  { href: "/admin/orders",      label: "Orders",    Icon: ShoppingCart                  },
+  { href: "/admin/inventory",   label: "Inventory", Icon: Boxes                         },
+  { href: "/admin/returns",     label: "Returns",   Icon: RotateCcw                     },
+  { href: "/admin/discounts",   label: "Coupons",   Icon: Tag                           },
+  { href: "/admin/users",       label: "Customers", Icon: Users                         },
+  { href: "/admin/reviews",     label: "Reviews",   Icon: Star                          },
+  { href: "/admin/analytics",   label: "Analytics", Icon: TrendingUp                    },
 ]
 
 async function requireAdmin() {

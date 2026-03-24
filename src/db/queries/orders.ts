@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { orders, orderItems, products, discountCodes, discountUsage, carts, cartItems } from "@/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 
 export type CreateOrderInput = {
   userId?: number;
@@ -125,7 +125,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{
     // Increment timesUsed
     await db
       .update(discountCodes)
-      .set({ timesUsed: db.$count(discountUsage, eq(discountUsage.discountCodeId, input.discountCodeId)) as unknown as number })
+      .set({ timesUsed: sql`${discountCodes.timesUsed} + 1` })
       .where(eq(discountCodes.id, input.discountCodeId));
   }
 

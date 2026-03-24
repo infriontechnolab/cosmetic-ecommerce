@@ -13,16 +13,32 @@ export default async function TrustBar() {
   const items = await getTrustItems()
 
   return (
-    <div className="border-t border-b border-border bg-void-2">
-      <div className="max-w-[1440px] mx-auto px-6 flex items-stretch">
-        {items.map((item, i) => (
-          <div key={item.title} className={`flex-1 flex items-center gap-3 py-[18px] px-6 ${i < items.length - 1 ? 'border-r border-border' : ''}`}>
-            <div className="w-9 h-9 border border-border-hi flex items-center justify-center flex-shrink-0">
-              <span className="[&_svg]:w-4 [&_svg]:h-4 [&_svg]:stroke-acid">{ICONS[item.iconKey]}</span>
-            </div>
+    <div className="border-b border-border" style={{ background: 'var(--color-ivory)' }}>
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-wrap sm:flex-nowrap divide-y divide-border sm:divide-y-0 sm:divide-x sm:divide-border">
+        {items.map((item) => (
+          <div
+            key={item.title}
+            className="flex items-center gap-3.5 py-3.5 sm:py-5 px-4 sm:px-7 flex-1 min-w-[50%] sm:min-w-0"
+          >
+            <span
+              className="flex-shrink-0 [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current"
+              style={{ color: 'var(--color-terracotta)' }}
+            >
+              {ICONS[item.iconKey]}
+            </span>
             <div>
-              <div className="text-[13px] font-bold text-chalk">{item.title}</div>
-              <div className="text-xs text-chalk-3 mt-px">{item.sub}</div>
+              <div
+                className="text-[12px] sm:text-[13px] font-semibold leading-tight"
+                style={{ color: 'var(--color-deep-wine)' }}
+              >
+                {item.title}
+              </div>
+              <div
+                className="text-[11px] sm:text-xs mt-px leading-tight"
+                style={{ color: 'var(--color-warm-gray)' }}
+              >
+                {item.sub}
+              </div>
             </div>
           </div>
         ))}

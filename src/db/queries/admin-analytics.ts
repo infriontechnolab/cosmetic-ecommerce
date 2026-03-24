@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { orders, orderItems, products, categories } from "@/db/schema";
+import { orders, orderItems, products, categories, users, returnRequests } from "@/db/schema";
 import { eq, and, gte, lte, isNull, sql, desc, count } from "drizzle-orm";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,6 +30,13 @@ export interface SummaryStats {
   avgOrderValue: number;
   totalItems: number;
   totalReturns: number;
+  newCustomers: number;
+}
+
+export interface PaymentMethodBreakdown {
+  method: string;
+  count: number;
+  revenue: number;
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -103,9 +110,7 @@ export async function getSummaryStats(from: Date, to: Date): Promise<SummaryStat
     );
 
   const [itemRow] = await db
-    .select({
-      totalItems: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)`,
-    })
+    .select({ totalItems: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)` })
     .from(orderItems)
     .innerJoin(orders, eq(orderItems.orderId, orders.id))
     .where(
@@ -117,12 +122,23 @@ export async function getSummaryStats(from: Date, to: Date): Promise<SummaryStat
       )
     );
 
+  const [returnsRow] = await db
+    .select({ total: count() })
+    .from(returnRequests)
+    .where(and(isNull(returnRequests.deletedAt), gte(returnRequests.createdAt, from), lte(returnRequests.createdAt, to)));
+
+  const [customersRow] = await db
+    .select({ total: count() })
+    .from(users)
+    .where(and(isNull(users.deletedAt), gte(users.createdAt, from), lte(users.createdAt, to)));
+
   return {
     totalRevenue: Number(row?.totalRevenue ?? 0),
     totalOrders: Number(row?.totalOrders ?? 0),
     avgOrderValue: Number(row?.avgOrderValue ?? 0),
     totalItems: Number(itemRow?.totalItems ?? 0),
-    totalReturns: 0, // placeholder — would join returnRequests
+    totalReturns: Number(returnsRow?.total ?? 0),
+    newCustomers: Number(customersRow?.total ?? 0),
   };
 }
 
@@ -256,4 +272,31 @@ export async function getOrderStatusBreakdown(from: Date, to: Date) {
     .groupBy(orders.status);
 
   return Object.fromEntries(rows.map((r) => [r.status, Number(r.cnt)]));
+}
+
+// ─── Payment method breakdown ─────────────────────────────────────────────────
+
+export async function getPaymentMethodBreakdown(from: Date, to: Date): Promise<PaymentMethodBreakdown[]> {
+  const rows = await db
+    .select({
+      method: orders.paymentMethod,
+      orderCount: count(),
+      revenue: sql<number>`COALESCE(SUM(CAST(${orders.totalAmount} AS DECIMAL(12,2))), 0)`,
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.paymentStatus, "completed"),
+        isNull(orders.deletedAt),
+        gte(orders.createdAt, from),
+        lte(orders.createdAt, to)
+      )
+    )
+    .groupBy(orders.paymentMethod);
+
+  return rows.map((r) => ({
+    method: r.method,
+    count: Number(r.orderCount),
+    revenue: Number(r.revenue),
+  }));
 }

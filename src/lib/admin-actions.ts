@@ -6,8 +6,12 @@ import {
   adminCreateProduct,
   adminUpdateProduct,
   adminDeleteProduct,
+  addProductImage,
+  setProductImagePrimary,
+  removeProductImage,
   type CreateProductInput,
 } from "@/db/queries/admin-products";
+import { updateReviewStatus } from "@/db/queries/reviews";
 import { revalidatePath } from "next/cache";
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
@@ -93,4 +97,38 @@ function extractProductFormData(formData: FormData): CreateProductInput {
     metaTitle: str("metaTitle") || undefined,
     metaDescription: str("metaDescription") || undefined,
   };
+}
+
+// ─── Product Images ───────────────────────────────────────────────────────────
+
+export async function addProductImageAction(productId: number, imageUrl: string, altText: string, isPrimary: boolean) {
+  await requireAdmin();
+  await addProductImage(productId, imageUrl, altText || undefined, isPrimary);
+  revalidatePath(`/admin/products/${productId}/edit`);
+}
+
+export async function setProductImagePrimaryAction(productId: number, imageId: number) {
+  await requireAdmin();
+  await setProductImagePrimary(productId, imageId);
+  revalidatePath(`/admin/products/${productId}/edit`);
+}
+
+export async function removeProductImageAction(productId: number, imageId: number) {
+  await requireAdmin();
+  await removeProductImage(imageId);
+  revalidatePath(`/admin/products/${productId}/edit`);
+}
+
+// ─── Reviews ──────────────────────────────────────────────────────────────────
+
+export async function approveReviewAction(reviewId: number) {
+  await requireAdmin();
+  await updateReviewStatus(reviewId, "approved");
+  revalidatePath("/admin/reviews");
+}
+
+export async function rejectReviewAction(reviewId: number) {
+  await requireAdmin();
+  await updateReviewStatus(reviewId, "rejected");
+  revalidatePath("/admin/reviews");
 }

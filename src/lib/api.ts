@@ -1,12 +1,8 @@
 import type { Product, Deal } from '@/types/product'
 import type { Announcement, NavCategory, Category, Brand, SkinConcern, Review, RitualStep, TrustItem, HeroData, FooterData, LoyaltyData } from '@/types/site'
-import dealsData from '@/data/deals.json'
+import { getHomeCategories, getHomeBrands, getHomeSkinConcerns, getHomeDeals, getHomeFeaturedReviews } from '@/db/queries/homepage'
 import announcementsData from '@/data/announcements.json'
 import navCategoriesData from '@/data/nav-categories.json'
-import categoriesData from '@/data/categories.json'
-import brandsData from '@/data/brands.json'
-import skinConcernsData from '@/data/skin-concerns.json'
-import reviewsData from '@/data/reviews.json'
 import ritualStepsData from '@/data/ritual-steps.json'
 import trustItemsData from '@/data/trust-items.json'
 import heroData from '@/data/hero.json'
@@ -54,8 +50,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function getDeals(): Promise<Deal[]> {
-  await Promise.resolve()
-  return dealsData as Deal[]
+  return getHomeDeals()
 }
 
 export async function getAnnouncements(): Promise<Announcement[]> {
@@ -69,23 +64,19 @@ export async function getNavCategories(): Promise<NavCategory[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  await Promise.resolve()
-  return categoriesData as Category[]
+  return getHomeCategories()
 }
 
 export async function getBrandsData(): Promise<{ tabs: string[]; items: Brand[] }> {
-  await Promise.resolve()
-  return brandsData as { tabs: string[]; items: Brand[] }
+  return getHomeBrands()
 }
 
 export async function getSkinConcerns(): Promise<SkinConcern[]> {
-  await Promise.resolve()
-  return skinConcernsData as SkinConcern[]
+  return getHomeSkinConcerns()
 }
 
 export async function getReviews(): Promise<Review[]> {
-  await Promise.resolve()
-  return reviewsData as Review[]
+  return getHomeFeaturedReviews()
 }
 
 export async function getRitualSteps(): Promise<RitualStep[]> {

@@ -10,20 +10,28 @@ import EveningRitual from '@/components/sections/EveningRitual'
 import CustomerReviews from '@/components/sections/CustomerReviews'
 import ShadeQuizCTA from '@/components/sections/ShadeQuizCTA'
 import Newsletter from '@/components/sections/Newsletter'
+import { getCategories, getBrandsData, getSkinConcerns, getReviews } from '@/lib/api'
 
-export default function Home() {
+export default async function Home() {
+  const [cats, brandsData, concerns, reviews] = await Promise.all([
+    getCategories(),
+    getBrandsData(),
+    getSkinConcerns(),
+    getReviews(),
+  ])
+
   return (
     <>
       <HeroSection />
       <TrustBar />
-      <TopCategories />
-      <ShopByBrand />
-      <SkinConcerns />
+      <TopCategories cats={cats} />
+      <ShopByBrand initialData={brandsData} />
+      <SkinConcerns concerns={concerns} />
       <EditorsPicks />
       <LoyaltyRewards />
       <TodaysBestDeals />
       <EveningRitual />
-      <CustomerReviews />
+      <CustomerReviews reviews={reviews} />
       <ShadeQuizCTA />
       <Newsletter />
     </>

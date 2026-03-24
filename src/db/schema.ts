@@ -654,6 +654,42 @@ export const emailLogs = mysqlTable(
 );
 
 // ============================================================================
+// NEWSLETTER
+// ============================================================================
+
+export const newsletterSubscribers = mysqlTable(
+  "newsletter_subscribers",
+  {
+    id: bigint("id", { mode: "number", unsigned: true }).autoincrement().primaryKey(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    isActive: boolean("is_active").default(true),
+    source: varchar("source", { length: 50 }).default("homepage"),
+    subscribedAt: datetime("subscribed_at").default(new Date()),
+    unsubscribedAt: datetime("unsubscribed_at"),
+  }
+);
+
+// ============================================================================
+// QUIZ
+// ============================================================================
+
+export const quizResults = mysqlTable(
+  "quiz_results",
+  {
+    id: bigint("id", { mode: "number", unsigned: true }).autoincrement().primaryKey(),
+    userId: bigint("user_id", { mode: "number", unsigned: true }).notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+    skinType: varchar("skin_type", { length: 50 }),
+    primaryConcern: varchar("primary_concern", { length: 100 }),
+    undertone: varchar("undertone", { length: 50 }),
+    recommendedShades: text("recommended_shades"),
+    recommendedProducts: text("recommended_products"),
+    completedAt: datetime("completed_at").default(new Date()),
+    updatedAt: datetime("updated_at").default(new Date()),
+  },
+  (t) => [index("idx_user_id").on(t.userId)]
+);
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 

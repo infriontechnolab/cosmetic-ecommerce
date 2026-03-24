@@ -71,7 +71,7 @@ function SignInForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-sm placeholder:text-chalk/25 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full px-4 py-3 bg-void-2 border border-border rounded-lg text-sm text-chalk placeholder:text-chalk-3 focus:outline-none focus:border-acid transition-colors"
               placeholder="you@example.com"
             />
           </div>
@@ -86,7 +86,7 @@ function SignInForm() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-sm placeholder:text-chalk/25 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full px-4 py-3 bg-void-2 border border-border rounded-lg text-sm text-chalk placeholder:text-chalk-3 focus:outline-none focus:border-acid transition-colors"
               placeholder="••••••••"
             />
           </div>
@@ -103,14 +103,14 @@ function SignInForm() {
         {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
           <>
             <div className="my-5 flex items-center gap-3">
-              <div className="flex-1 border-t border-white/10" />
-              <span className="text-xs text-chalk/30">or</span>
-              <div className="flex-1 border-t border-white/10" />
+              <div className="flex-1 border-t border-border" />
+              <span className="text-xs text-chalk-3">or</span>
+              <div className="flex-1 border-t border-border" />
             </div>
 
             <button
               onClick={() => signIn("google", { callbackUrl })}
-              className="w-full py-3 border border-white/10 text-sm font-medium rounded-lg hover:bg-white/5 transition-colors flex items-center justify-center gap-2.5"
+              className="w-full py-3 border border-border text-sm font-medium rounded-lg hover:bg-void-2 transition-colors flex items-center justify-center gap-2.5"
             >
               <GoogleIcon />
               Continue with Google

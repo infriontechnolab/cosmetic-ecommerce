@@ -54,18 +54,24 @@ export async function getCartItems(sessionId: string): Promise<CartItem[]> {
     .leftJoin(brands, eq(products.brandId, brands.id))
     .where(eq(carts.sessionId, sessionId));
 
-  return rows.map((r) => ({
-    id: r.productSlug,
-    brand: r.brandName ?? "",
-    name: r.productName,
-    price: formatPrice(r.price),
-    image: r.primaryImage ?? "",
-    bgColor: r.bgColor ?? "#f5f0eb",
-    quantity: r.quantity,
-    ...(r.selectedShade ? { shade: r.selectedShade } : {}),
-    ...(r.selectedSize ? { size: r.selectedSize } : {}),
-    _itemId: r.itemId, // internal DB row id for updates/deletes
-  })) as CartItem[];
+  return rows.map((r) => {
+    const shade = r.selectedShade ?? undefined;
+    const size = r.selectedSize ?? undefined;
+    const lineKey = [r.productSlug, shade ?? '', size ?? ''].join(':');
+    return {
+      lineKey,
+      id: r.productSlug,
+      brand: r.brandName ?? "",
+      name: r.productName,
+      price: formatPrice(r.price),
+      image: r.primaryImage ?? "",
+      bgColor: r.bgColor ?? "#f5f0eb",
+      quantity: r.quantity,
+      ...(shade ? { shade } : {}),
+      ...(size ? { size } : {}),
+      _itemId: r.itemId, // internal DB row id for updates/deletes
+    };
+  }) as CartItem[];
 }
 
 // ─── add item to cart ────────────────────────────────────────────────────────

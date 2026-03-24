@@ -1,14 +1,14 @@
 {
   "tabs": ["Popular", "Luxe", "New Launches", "Only at Maison"],
   "items": [
-    { "name": "Charlotte Tilbury", "offer": "Gift on ₹5000+", "type": "acid" },
-    { "name": "La Mer", "offer": "Up to 30% Off", "type": "acid" },
-    { "name": "NARS", "offer": "New Arrivals", "type": "dim" },
-    { "name": "Dior Beauty", "offer": "3 gifts on ₹12k+", "type": "acid" },
-    { "name": "Lancôme", "offer": "Up to 25% Off", "type": "acid" },
-    { "name": "Tom Ford", "offer": "Pouch on ₹8000", "type": "muted" },
-    { "name": "YSL Beauty", "offer": "New Collection", "type": "dim" },
-    { "name": "Estée Lauder", "offer": "Up to 20% Off", "type": "acid" },
-    { "name": "Clinique", "offer": "SPF Collection", "type": "dim" }
+    { "name": "Charlotte Tilbury", "offer": "Gift on ₹5000+", "type": "acid", "tabs": [0, 1] },
+    { "name": "La Mer", "offer": "Up to 30% Off", "type": "acid", "tabs": [0, 1] },
+    { "name": "NARS", "offer": "New Arrivals", "type": "dim", "tabs": [0, 2] },
+    { "name": "Dior Beauty", "offer": "3 gifts on ₹12k+", "type": "acid", "tabs": [1] },
+    { "name": "Lancôme", "offer": "Up to 25% Off", "type": "acid", "tabs": [0, 1] },
+    { "name": "Tom Ford", "offer": "Pouch on ₹8000", "type": "muted", "tabs": [1, 3] },
+    { "name": "YSL Beauty", "offer": "New Collection", "type": "dim", "tabs": [1, 2] },
+    { "name": "Estée Lauder", "offer": "Up to 20% Off", "type": "acid", "tabs": [0] },
+    { "name": "Clinique", "offer": "SPF Collection", "type": "dim", "tabs": [2, 3] }
   ]
 }

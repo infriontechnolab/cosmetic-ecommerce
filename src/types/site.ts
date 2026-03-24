@@ -4,7 +4,7 @@ export interface NavCategory { label: string }
 
 export interface Category { icon: string; name: string }
 
-export interface Brand { name: string; offer: string; type: 'acid' | 'dim' | 'muted' }
+export interface Brand { name: string; offer: string; type: 'acid' | 'dim' | 'muted'; tabs?: number[] }
 export interface BrandTab { label: string }
 
 export interface SkinConcern { icon: string; label: string; count: string }

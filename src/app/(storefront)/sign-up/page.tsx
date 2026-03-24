@@ -48,6 +48,20 @@ export default function SignUpPage() {
       return;
     }
 
+    // Merge guest cart into user cart
+    const guestSessionId = document.cookie
+      .split("; ")
+      .find((r) => r.startsWith("cart_session_id="))
+      ?.split("=")[1];
+
+    if (guestSessionId) {
+      await fetch("/api/cart/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guestSessionId }),
+      });
+    }
+
     router.push("/account");
     router.refresh();
   }
@@ -77,7 +91,7 @@ export default function SignUpPage() {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-sm placeholder:text-chalk/25 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full px-4 py-3 bg-void-2 border border-border rounded-lg text-sm text-chalk placeholder:text-chalk-3 focus:outline-none focus:border-acid transition-colors"
               placeholder="Your name"
             />
           </div>
@@ -92,7 +106,7 @@ export default function SignUpPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-sm placeholder:text-chalk/25 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full px-4 py-3 bg-void-2 border border-border rounded-lg text-sm text-chalk placeholder:text-chalk-3 focus:outline-none focus:border-acid transition-colors"
               placeholder="you@example.com"
             />
           </div>
@@ -108,7 +122,7 @@ export default function SignUpPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-sm placeholder:text-chalk/25 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full px-4 py-3 bg-void-2 border border-border rounded-lg text-sm text-chalk placeholder:text-chalk-3 focus:outline-none focus:border-acid transition-colors"
               placeholder="Min. 8 characters"
             />
           </div>

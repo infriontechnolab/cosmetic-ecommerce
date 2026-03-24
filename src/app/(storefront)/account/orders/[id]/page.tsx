@@ -69,7 +69,9 @@ function StatusTimeline({ status }: { status: OrderStatus }) {
           Order Status
         </h3>
         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20">
-          <span className="text-2xl">❌</span>
+          <span className="text-red-400">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.4" stroke="currentColor" className="w-6 h-6"><circle cx="12" cy="12" r="9" strokeLinecap="round"/><line x1="15" y1="9" x2="9" y2="15" strokeLinecap="round"/><line x1="9" y1="9" x2="15" y2="15" strokeLinecap="round"/></svg>
+          </span>
           <div>
             <div className="text-sm font-bold text-red-400">
               {STATUS_LABEL[status]}
@@ -204,7 +206,9 @@ export default async function OrderDetailPage({
                 Shipment Tracking
               </h3>
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🚚</span>
+                <span style={{ color: 'var(--color-terracotta)' }}>
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.4" stroke="currentColor" className="w-6 h-6"><rect x="1" y="3" width="15" height="13" rx="1" strokeLinecap="round"/><path strokeLinecap="round" strokeLinejoin="round" d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>
+                </span>
                 <div>
                   {order.courierPartner && (
                     <div className="text-xs text-chalk-3 mb-0.5">

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { products, productImages, productShades, productReviews, brands, categories } from "@/db/schema";
-import { and, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import type { Product } from "@/types/product";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -150,7 +150,22 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
-  return fetchProducts(eq(categories.slug, categorySlug));
+  const [parent] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.slug, categorySlug))
+    .limit(1);
+
+  if (!parent) return [];
+
+  const children = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.parentId, parent.id));
+
+  const allCatIds = [parent.id, ...children.map((c) => c.id)];
+
+  return fetchProducts(inArray(products.categoryId, allCatIds));
 }
 
 export async function getProductsByBrand(brandSlug: string): Promise<Product[]> {
@@ -172,4 +187,22 @@ export async function searchProducts(query: string): Promise<Product[]> {
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const results = await fetchProducts(eq(products.slug, slug));
   return results[0] ?? null;
+}
+
+/**
+ * Returns all image URLs for a product ordered by: primary first, then displayOrder.
+ * Falls back to an empty array if no images exist.
+ */
+export async function getProductImages(productId: number): Promise<string[]> {
+  const rows = await db
+    .select({
+      imageUrl: productImages.imageUrl,
+      isPrimary: productImages.isPrimary,
+      displayOrder: productImages.displayOrder,
+    })
+    .from(productImages)
+    .where(and(eq(productImages.productId, productId), sql`${productImages.deletedAt} IS NULL`))
+    .orderBy(desc(productImages.isPrimary), asc(productImages.displayOrder));
+
+  return rows.map((r) => r.imageUrl);
 }
